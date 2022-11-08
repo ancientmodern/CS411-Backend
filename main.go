@@ -1,55 +1,142 @@
 package main
 
 import (
+	"database/sql"
+	. "example/web-service-gin/common"
+	"fmt"
 	"github.com/gin-gonic/gin"
+	"log"
 	"net/http"
+	"os"
+	"time"
+
+	_ "github.com/go-sql-driver/mysql"
 )
 
-type album struct {
-	ID     string  `json:"id"`
-	Title  string  `json:"title"`
-	Artist string  `json:"artist"`
-	Price  float64 `json:"price"`
-}
-
-var albums = []album{
-	{ID: "1", Title: "Blue Train", Artist: "John Coltrane", Price: 56.99},
-	{ID: "2", Title: "Jeru", Artist: "Gerry Mulligan", Price: 17.99},
-	{ID: "3", Title: "Sarah Vaughan and Clifford Brown", Artist: "Sarah Vaughan", Price: 39.99},
-}
+var db *sql.DB
 
 func main() {
+	err := initDB()
+	if err != nil {
+		fmt.Printf("init db failed, err:%v\n", err)
+		return
+	}
+
 	router := gin.Default()
-	router.GET("/albums", getAlbums)
-	router.GET("/albums/:id", getAlbumByID)
-	router.POST("/albums", postAlbums)
+
+	v1 := router.Group("/api/v1")
+	{
+		v1.GET("/searchRestaurant", searchRestaurant)
+	}
 
 	router.Run("localhost:8080")
 }
 
-func getAlbums(c *gin.Context) {
-	c.IndentedJSON(http.StatusOK, albums)
+// initDB initializes a TCP connection pool for a Cloud SQL
+// instance of MySQL.
+func initDB() error {
+	mustGetenv := func(k string) string {
+		v := os.Getenv(k)
+		if v == "" {
+			log.Fatalf("Warning: %s environment variable not set.", k)
+		}
+		return v
+	}
+	// Note: Saving credentials in environment variables is convenient, but not
+	// secure - consider a more secure solution such as
+	// Cloud Secret Manager (https://cloud.google.com/secret-manager) to help
+	// keep secrets safe.
+	var (
+		dbUser    = mustGetenv("DB_USER")       // e.g. 'my-db-user'
+		dbPwd     = mustGetenv("DB_PASS")       // e.g. 'my-db-password'
+		dbName    = mustGetenv("DB_NAME")       // e.g. 'my-database'
+		dbPort    = mustGetenv("DB_PORT")       // e.g. '3306'
+		dbTCPHost = mustGetenv("INSTANCE_HOST") // e.g. '127.0.0.1' ('172.17.0.1' if deployed to GAE Flex)
+	)
+
+	dbURI := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true",
+		dbUser, dbPwd, dbTCPHost, dbPort, dbName)
+
+	fmt.Println(dbURI)
+
+	// db is the pool of database connections.
+	var err error
+	db, err = sql.Open("mysql", dbURI)
+	if err != nil {
+		return fmt.Errorf("sql.Open: %v", err)
+	}
+
+	// Test connection
+	//if err = db.Ping(); err != nil {
+	//	fmt.Printf("init db failed, err:%v\n", err)
+	//	return
+	//} else {
+	//	fmt.Println("connection success")
+	//}
+
+	// config
+	db.SetConnMaxLifetime(time.Minute * 3)
+	db.SetMaxOpenConns(10)
+	db.SetMaxIdleConns(10)
+
+	return nil
 }
 
-func postAlbums(c *gin.Context) {
-	var newAlbum album
+func searchRestaurant(c *gin.Context) {
+	//var req SearchRestaurantRequest
+	//if c.Bind(&req) != nil {
+	//	c.String(http.StatusBadRequest, "Query parameters are not correct")
+	//	return
+	//}
 
-	if err := c.BindJSON(&newAlbum); err != nil {
+	//var whereStr string
+	//if req.RestaurantName != "" && req.ZipCode != 0 {
+	//	whereStr = fmt.Sprintf("WHERE RestaurantName LIKE '%%%s%%' AND ZipCode = %d", req.RestaurantName, req.ZipCode)
+	//} else if req.RestaurantName != "" {
+	//	whereStr = fmt.Sprintf("WHERE RestaurantName LIKE '%%%s%%'", req.RestaurantName)
+	//} else if req.ZipCode != 0 {
+	//	whereStr = fmt.Sprintf("WHERE ZipCode = %d", req.ZipCode)
+	//} else {
+	//	whereStr = ""
+	//}
+
+	name := c.DefaultQuery("restaurantName", "")
+	minCode := c.DefaultQuery("zipCode", "0")
+	maxCode := c.DefaultQuery("zipCode", "100000")
+	order := c.DefaultQuery("orderBy", "RestaurantID")
+	ascend := c.DefaultQuery("ascend", "ASC")
+	if ascend == "false" {
+		ascend = "DESC"
+	}
+
+	sqlStr := fmt.Sprintf(
+		"SELECT RestaurantID, RestaurantName, ZipCode, RestaurantAddr "+
+			"FROM Restaurants "+
+			"WHERE RestaurantName LIKE '%%%s%%' AND ZipCode >= %s AND ZipCode <= %s "+
+			"ORDER BY %s %s",
+		name, minCode, maxCode, order, ascend,
+	)
+	fmt.Println(sqlStr)
+
+	rows, err := db.Query(sqlStr)
+	if err != nil {
+		fmt.Printf("query failed, err: %v\n", err)
+		c.String(http.StatusBadRequest, "query failed, err: %v\n", err)
 		return
 	}
+	defer rows.Close()
 
-	albums = append(albums, newAlbum)
-	c.IndentedJSON(http.StatusCreated, newAlbum)
-}
-
-func getAlbumByID(c *gin.Context) {
-	id := c.Param("id")
-
-	for _, a := range albums {
-		if a.ID == id {
-			c.IndentedJSON(http.StatusOK, a)
+	var res SearchRestaurantResponse
+	for rows.Next() {
+		var row SearchRestaurantResponseItem
+		err := rows.Scan(&row.RestaurantID, &row.RestaurantName, &row.ZipCode, &row.RestaurantAddr)
+		if err != nil {
+			fmt.Printf("scan failed, err: %v\n", err)
+			c.String(http.StatusBadRequest, "scan failed, err: %v\n", err)
 			return
 		}
+		res = append(res, row)
 	}
-	c.IndentedJSON(http.StatusNotFound, gin.H{"message": "album not found"})
+
+	c.IndentedJSON(http.StatusOK, res)
 }
