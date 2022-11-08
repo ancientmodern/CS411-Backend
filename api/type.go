@@ -1,4 +1,10 @@
-package common
+package api
+
+// TODO:
+// All request structs should be useless...
+// It's better to process all query strings by DefaultQuery() than Bind()
+// See ../main.go/searchRestaurant()
+// If Bind() is used, json should be changed to form in all request structs
 
 type SearchRestaurantRequest struct {
 	RestaurantName string `form:"restaurantName"`
