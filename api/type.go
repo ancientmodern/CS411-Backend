@@ -52,7 +52,9 @@ type deleteOrderRequest struct {
 }
 
 type deleteOrderResponse struct {
-	Success bool `json:"success"`
+	OrderID int    `json:"orderID"`
+	Success bool   `json:"success"`
+	Error   string `json:"error"`
 }
 
 type addCommentRequest struct {

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -211,4 +212,53 @@ func PlaceOrder(c *gin.Context) {
 		res[i].OrderID = int(firstID) + i
 	}
 	c.IndentedJSON(http.StatusOK, res)
+}
+
+func DeleteOrder(c *gin.Context) {
+	oid := c.Query("orderID")
+	if oid == "" {
+		fmt.Println("Missing query string 'orderID'")
+		c.IndentedJSON(http.StatusBadRequest, deleteOrderResponse{
+			-1,
+			false,
+			"Missing query string 'orderID'"})
+		return
+	}
+
+	orderID, err := strconv.Atoi(oid)
+	if err != nil {
+		fmt.Println("orderID has invalid format")
+		c.IndentedJSON(http.StatusBadRequest, deleteOrderResponse{
+			-1,
+			false,
+			"orderID has invalid format"})
+		return
+	}
+
+	sqlStr := "DELETE FROM Orders WHERE OrderID = ?"
+	fmt.Printf("DELETE FROM Orders WHERE OrderID = %d", orderID)
+
+	ctx, cancelFunc := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancelFunc()
+	stmt, err := DBPool.PrepareContext(ctx, sqlStr)
+	if err != nil {
+		fmt.Printf("PrepareContext failed, err: %v\n", err)
+		c.IndentedJSON(http.StatusBadRequest, deleteOrderResponse{
+			-1,
+			false,
+			fmt.Sprintf("PrepareContext failed, err: %v\n", err)})
+		return
+	}
+	defer stmt.Close()
+	_, err = stmt.ExecContext(ctx, orderID)
+	if err != nil {
+		fmt.Printf("ExecContext failed, err: %v\n", err)
+		c.IndentedJSON(http.StatusBadRequest, deleteOrderResponse{
+			-1,
+			false,
+			fmt.Sprintf("ExecContext failed, err: %v\n", err)})
+		return
+	}
+
+	c.IndentedJSON(http.StatusOK, deleteOrderResponse{orderID, true, ""})
 }

@@ -22,6 +22,7 @@ func main() {
 		v1.GET("/searchRestaurant", SearchRestaurant)
 		v1.GET("/searchDish", SearchDish)
 		v1.POST("/placeOrder", PlaceOrder)
+		v1.DELETE("/deleteOrder", DeleteOrder)
 	}
 
 	router.Run("localhost:8080")
