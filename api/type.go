@@ -6,21 +6,21 @@ package api
 // See ../main.go/searchRestaurant()
 // If Bind() is used, json should be changed to form in all request structs
 
-type SearchRestaurantRequest struct {
+type searchRestaurantRequest struct {
 	RestaurantName string `form:"restaurantName"`
 	ZipCode        int    `form:"zipCode"`
 	OrderBy        string `form:"orderBy"`
 	Ascend         bool   `form:"ascend"`
 }
 
-type SearchRestaurantResponseItem struct {
+type searchRestaurantResponseItem struct {
 	RestaurantID   int    `json:"restaurantID"`
 	RestaurantName string `json:"restaurantName"`
 	ZipCode        int    `json:"zipCode"`
 	RestaurantAddr string `json:"restaurantAddr"`
 }
 
-type SearchRestaurantResponse []SearchRestaurantResponseItem
+type searchRestaurantResponse []searchRestaurantResponseItem
 
 type searchDishRequest struct {
 	RestaurantID int `json:"restaurantID"`
@@ -30,6 +30,7 @@ type searchDishResponseItem struct {
 	DishID   int     `json:"dishID"`
 	DishName string  `json:"dishName"`
 	Price    float64 `json:"price"`
+	Category string  `json:"category"`
 }
 
 type searchDishResponse []searchDishResponseItem

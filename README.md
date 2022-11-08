@@ -34,3 +34,5 @@ chmod +x cloud_sql_proxy
 ```shell
 DB_USER=${user} DB_PASS=${password} DB_NAME=test411 DB_PORT=3306 INSTANCE_HOST=127.0.0.1 ./main
 ```
+## REST API format
+https://docs.google.com/document/d/1A0gR0ikaMZ6yH2HnQQ4vFLo0zqM2efcOIIjumdQ0KfI/edit

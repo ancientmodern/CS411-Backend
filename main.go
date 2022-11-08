@@ -20,6 +20,7 @@ func main() {
 	v1 := router.Group("/api/v1")
 	{
 		v1.GET("/searchRestaurant", SearchRestaurant)
+		v1.GET("/searchDish", SearchDish)
 	}
 
 	router.Run("localhost:8080")

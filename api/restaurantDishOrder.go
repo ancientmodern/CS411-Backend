@@ -51,13 +51,58 @@ func SearchRestaurant(c *gin.Context) {
 	}
 	defer rows.Close()
 
-	var res SearchRestaurantResponse
+	res := make(searchRestaurantResponse, 0)
 	for rows.Next() {
-		var row SearchRestaurantResponseItem
+		var row searchRestaurantResponseItem
 		err := rows.Scan(&row.RestaurantID, &row.RestaurantName, &row.ZipCode, &row.RestaurantAddr)
 		if err != nil {
 			fmt.Printf("scan failed, err: %v\n", err)
 			c.String(http.StatusBadRequest, "scan failed, err: %v\n", err)
+			return
+		}
+		res = append(res, row)
+	}
+
+	c.IndentedJSON(http.StatusOK, res)
+}
+
+func SearchDish(c *gin.Context) {
+	rid := c.Query("restaurantID")
+	if rid == "" {
+		fmt.Println("Missing query string 'restaurantID'")
+		c.String(http.StatusBadRequest, "Missing query string 'restaurantID'")
+		return
+	}
+	order := c.DefaultQuery("orderBy", "DishID")
+	ascend := c.DefaultQuery("ascend", "ASC")
+	if ascend == "false" {
+		ascend = "DESC"
+	}
+
+	sqlStr := fmt.Sprintf(
+		"SELECT DishID, DishName, Price, Category "+
+			"FROM Dishes "+
+			"WHERE RestaurantID = %s "+
+			"ORDER BY %s %s",
+		rid, order, ascend,
+	)
+	fmt.Println(sqlStr)
+
+	rows, err := DBPool.Query(sqlStr)
+	if err != nil {
+		fmt.Printf("Query failed, err: %v\n", err)
+		c.String(http.StatusBadRequest, "Query failed, err: %v\n", err)
+		return
+	}
+	defer rows.Close()
+
+	res := make(searchDishResponse, 0)
+	for rows.Next() {
+		var row searchDishResponseItem
+		err := rows.Scan(&row.DishID, &row.DishName, &row.Price, &row.Category)
+		if err != nil {
+			fmt.Printf("Scan failed, err: %v\n", err)
+			c.String(http.StatusBadRequest, "Scan failed, err: %v\n", err)
 			return
 		}
 		res = append(res, row)
