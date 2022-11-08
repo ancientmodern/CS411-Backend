@@ -1,10 +1,13 @@
 package api
 
 import (
+	"context"
 	. "example/web-service-gin/database"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"strings"
+	"time"
 )
 
 func SearchRestaurant(c *gin.Context) {
@@ -12,17 +15,6 @@ func SearchRestaurant(c *gin.Context) {
 	//if c.Bind(&req) != nil {
 	//	c.String(http.StatusBadRequest, "Query parameters are not correct")
 	//	return
-	//}
-
-	//var whereStr string
-	//if req.RestaurantName != "" && req.ZipCode != 0 {
-	//	whereStr = fmt.Sprintf("WHERE RestaurantName LIKE '%%%s%%' AND ZipCode = %d", req.RestaurantName, req.ZipCode)
-	//} else if req.RestaurantName != "" {
-	//	whereStr = fmt.Sprintf("WHERE RestaurantName LIKE '%%%s%%'", req.RestaurantName)
-	//} else if req.ZipCode != 0 {
-	//	whereStr = fmt.Sprintf("WHERE ZipCode = %d", req.ZipCode)
-	//} else {
-	//	whereStr = ""
 	//}
 
 	name := c.DefaultQuery("restaurantName", "")
@@ -34,6 +26,8 @@ func SearchRestaurant(c *gin.Context) {
 		ascend = "DESC"
 	}
 
+	// TODO: SQL Prepare
+	// FIXME: Potential SQL Injection
 	sqlStr := fmt.Sprintf(
 		"SELECT RestaurantID, RestaurantName, ZipCode, RestaurantAddr "+
 			"FROM Restaurants "+
@@ -79,6 +73,8 @@ func SearchDish(c *gin.Context) {
 		ascend = "DESC"
 	}
 
+	// TODO: SQL Prepare
+	// FIXME: Potential SQL Injection
 	sqlStr := fmt.Sprintf(
 		"SELECT DishID, DishName, Price, Category "+
 			"FROM Dishes "+
@@ -108,5 +104,111 @@ func SearchDish(c *gin.Context) {
 		res = append(res, row)
 	}
 
+	c.IndentedJSON(http.StatusOK, res)
+}
+
+func getDishPrice(dishID int) (float64, error) {
+	sqlStr := "SELECT Price FROM Dishes WHERE DishID = ?"
+	ctx, cancelFunc := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancelFunc()
+
+	stmt, err := DBPool.PrepareContext(ctx, sqlStr)
+	if err != nil {
+		fmt.Printf("GetDishPrice query preparing failed, err: %v\n", err)
+		return -1.0, err
+	}
+	defer stmt.Close()
+
+	var price float64
+	row := stmt.QueryRowContext(ctx, dishID)
+	if err := row.Scan(&price); err != nil {
+		fmt.Printf("GetDishPrice scanning failed, err: %v\n", err)
+		return -1.0, err
+	}
+	return price, nil
+}
+
+func getRandomRiderID() (int, error) {
+	sqlStr := "SELECT RiderID FROM Riders ORDER BY RAND() LIMIT 1"
+	ctx, cancelFunc := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancelFunc()
+
+	stmt, err := DBPool.PrepareContext(ctx, sqlStr)
+	if err != nil {
+		fmt.Printf("GetRandomRiderID query preparing failed, err: %v\n", err)
+		return -1, err
+	}
+	defer stmt.Close()
+
+	var riderID int
+	row := stmt.QueryRowContext(ctx)
+	if err := row.Scan(&riderID); err != nil {
+		fmt.Printf("GetRandomRiderID scanning failed, err: %v\n", err)
+		return -1, err
+	}
+	return riderID, nil
+}
+
+func PlaceOrder(c *gin.Context) {
+	var req placeOrderRequest
+
+	if err := c.BindJSON(&req); err != nil {
+		fmt.Printf("BindJSON failed, err: %v\n", err)
+		c.String(http.StatusBadRequest, "BindJSON failed, err: %v\n", err)
+		return
+	}
+
+	sqlStr := "INSERT INTO Orders(OrderTime, DishPrice, DishID, UserID, RiderID) VALUES "
+	var inserts []string
+	var params []interface{}
+	res := make(placeOrderResponse, 0)
+
+	for _, v := range req.DishIDList {
+		inserts = append(inserts, "(?, ?, ?, ?, ?)")
+
+		orderTime := time.Now().Format("20060201150405")
+		dishPrice, err := getDishPrice(v)
+		if err != nil {
+			c.String(http.StatusBadRequest, "GetDishPrice failed, err: %v\n", err)
+			return
+		}
+		riderID, err := getRandomRiderID()
+		if err != nil {
+			c.String(http.StatusBadRequest, "GetRandomRiderID failed, err: %v\n", err)
+			return
+		}
+		params = append(params, orderTime, dishPrice, v, req.UserID, riderID)
+		res = append(res, placeOrderResponseItem{0, riderID})
+	}
+	queryVals := strings.Join(inserts, ",")
+	sqlStr += queryVals
+	fmt.Println(sqlStr)
+	fmt.Println(params)
+
+	ctx, cancelfunc := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancelfunc()
+	stmt, err := DBPool.PrepareContext(ctx, sqlStr)
+	if err != nil {
+		fmt.Printf("PrepareContext failed, err: %v\n", err)
+		c.String(http.StatusBadRequest, "PrepareContext failed, err: %v\n", err)
+		return
+	}
+	defer stmt.Close()
+	queryRes, err := stmt.ExecContext(ctx, params...)
+	if err != nil {
+		fmt.Printf("ExecContext failed, err: %v\n", err)
+		c.String(http.StatusBadRequest, "ExecContext failed, err: %v\n", err)
+		return
+	}
+	firstID, err := queryRes.LastInsertId()
+	if err != nil {
+		fmt.Printf("LastInsertId failed, err: %v\n", err)
+		c.String(http.StatusBadRequest, "LastInsertId failed, err: %v\n", err)
+		return
+	}
+
+	for i := 0; i < len(res); i++ {
+		res[i].OrderID = int(firstID) + i
+	}
 	c.IndentedJSON(http.StatusOK, res)
 }

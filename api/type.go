@@ -1,9 +1,9 @@
 package api
 
 // TODO:
-// All request structs should be useless...
-// It's better to process all query strings by DefaultQuery() than Bind()
-// See ../main.go/searchRestaurant()
+// All request structs for *GET* method should be useless...
+// It's better to process all query strings by DefaultQuery() than Bind() in *GET* handlers
+// See ./restaurantDishOrder.go/searchRestaurant()
 // If Bind() is used, json should be changed to form in all request structs
 
 type searchRestaurantRequest struct {
@@ -41,8 +41,8 @@ type placeOrderRequest struct {
 }
 
 type placeOrderResponseItem struct {
-	OrderID int  `json:"orderID"`
-	Success bool `json:"success"`
+	OrderID int `json:"orderID"`
+	RiderID int `json:"riderID"`
 }
 
 type placeOrderResponse []placeOrderResponseItem
