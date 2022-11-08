@@ -14,9 +14,10 @@
 source ~/.zshrc
 gcloud auth application-default login
 ```
-3. Install go pkg dependencies (`go mod` or `go get`)
+3. Install go pkg dependencies (either `go mod` or `go get`)
 ```shell
 go mod tidy
+# go get .
 ```
 4. Build go executable file
 ```shell
@@ -24,11 +25,12 @@ go build main.go
 ```
 5. Install and run Google Cloud SQL Auth proxy in the background ([doc](https://cloud.google.com/sql/docs/mysql/sql-proxy))
 ```shell
+# the link is for M1 Mac, see doc for other platforms
 curl -o cloud_sql_proxy https://dl.google.com/cloudsql/cloud_sql_proxy.darwin.arm64
 chmod +x cloud_sql_proxy
 ./cloud_sql_proxy -instances=cs411-team067:us-central1:sometimesnaive=tcp:3306 &
 ```
-6. Run the program with environment variable
+6. Run the program with environment variables
 ```shell
 DB_USER=${user} DB_PASS=${password} DB_NAME=test411 DB_PORT=3306 INSTANCE_HOST=127.0.0.1 ./main
 ```
