@@ -7,7 +7,6 @@ import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	_ "github.com/go-sql-driver/mysql"
-	"time"
 )
 
 func main() {
@@ -19,17 +18,19 @@ func main() {
 
 	router := gin.Default()
 
-	router.Use(cors.New(cors.Config{
-		// AllowOrigins:     []string{"https://foo.com"},
-		AllowMethods:     []string{"GET", "POST", "DELETE"},
-		AllowHeaders:     []string{"Origin"},
-		ExposeHeaders:    []string{"Content-Length"},
-		AllowCredentials: true,
-		AllowOriginFunc: func(origin string) bool {
-			return true
-		},
-		MaxAge: 12 * time.Hour,
-	}))
+	//router.Use(cors.New(cors.Config{
+	//	// AllowOrigins:     []string{"https://foo.com"},
+	//	AllowMethods:     []string{"GET", "POST", "DELETE"},
+	//	AllowHeaders:     []string{"Origin"},
+	//	ExposeHeaders:    []string{"Content-Length"},
+	//	AllowCredentials: true,
+	//	AllowOriginFunc: func(origin string) bool {
+	//		return true
+	//	},
+	//	MaxAge: 12 * time.Hour,
+	//}))
+
+	router.Use(cors.Default())
 
 	v1 := router.Group("/api/v1")
 	{
@@ -39,5 +40,5 @@ func main() {
 		v1.DELETE("/deleteOrder", DeleteOrder)
 	}
 
-	router.Run("localhost:8080")
+	router.Run("localhost:80")
 }
