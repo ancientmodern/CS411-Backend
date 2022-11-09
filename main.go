@@ -4,8 +4,10 @@ import (
 	. "example/web-service-gin/api"
 	. "example/web-service-gin/database"
 	"fmt"
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	_ "github.com/go-sql-driver/mysql"
+	"time"
 )
 
 func main() {
@@ -16,6 +18,18 @@ func main() {
 	}
 
 	router := gin.Default()
+
+	router.Use(cors.New(cors.Config{
+		// AllowOrigins:     []string{"https://foo.com"},
+		AllowMethods:     []string{"GET", "POST", "DELETE"},
+		AllowHeaders:     []string{"Origin"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+		AllowOriginFunc: func(origin string) bool {
+			return true
+		},
+		MaxAge: 12 * time.Hour,
+	}))
 
 	v1 := router.Group("/api/v1")
 	{
