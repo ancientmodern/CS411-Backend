@@ -109,7 +109,6 @@ func DeleteComment(c *gin.Context) {
 		})
 		return
 	}
-
 	sqlStr := "DELETE Comments WHERE commentID = ?"
 
 	fmt.Println(sqlStr)
