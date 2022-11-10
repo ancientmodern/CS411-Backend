@@ -104,5 +104,4 @@ type historyOrderResponseItem struct {
 	DishID    int     `json:"dishID"`
 	RiderID   int     `json:"riderID"`
 }
-
 type historyOrderResponse []historyOrderResponseItem
