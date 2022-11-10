@@ -4,6 +4,7 @@ import (
 	. "example/web-service-gin/api"
 	. "example/web-service-gin/database"
 	"fmt"
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	_ "github.com/go-sql-driver/mysql"
 )
@@ -17,6 +18,8 @@ func main() {
 
 	router := gin.Default()
 
+	router.Use(cors.Default())
+
 	v1 := router.Group("/api/v1")
 	{
 		v1.GET("/searchRestaurant", SearchRestaurant)
@@ -25,5 +28,5 @@ func main() {
 		v1.DELETE("/deleteOrder", DeleteOrder)
 	}
 
-	router.Run("localhost:8080")
+	router.Run("0.0.0.0:80")
 }

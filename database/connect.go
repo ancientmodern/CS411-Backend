@@ -53,7 +53,7 @@ func InitDB() error {
 	//}
 
 	// config
-	DBPool.SetConnMaxLifetime(time.Minute * 3)
+	DBPool.SetConnMaxLifetime(time.Minute * 2)
 	DBPool.SetMaxOpenConns(10)
 	DBPool.SetMaxIdleConns(10)
 
