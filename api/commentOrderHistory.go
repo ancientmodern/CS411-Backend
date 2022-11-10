@@ -146,10 +146,10 @@ func SearchOrderHistory(c *gin.Context) {
 	}
 
 	userID := c.DefaultQuery("userID", "")
-	minPrice := c.DefaultQuery("dishPrice", "0")
-	maxPrice := c.DefaultQuery("dishPrice", "100000")
-	minTime := c.DefaultQuery("orderTime", "20200101000000")
-	maxTime := c.DefaultQuery("orderTime", "20221111235959")
+	minPrice := c.DefaultQuery("minPrice", "0")
+	maxPrice := c.DefaultQuery("maxPrice", "100000")
+	minTime := c.DefaultQuery("minTime", "20200101000000")
+	maxTime := c.DefaultQuery("maxTime", "20221111235959")
 	order := c.DefaultQuery("orderBy", "orderID")
 	ascend := c.DefaultQuery("ascend", "ASC")
 	if ascend == "false" {

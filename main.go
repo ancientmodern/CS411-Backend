@@ -29,7 +29,7 @@ func main() {
 		v1.POST("/addComment", AddComment)
 		v1.PUT("/updateComment", UpdateComment)
 		v1.DELETE("/deleteComment", DeleteComment)
-		v1.GET("/searchOrderHistory", SearchOrderHistory)
+		v1.GET("/historyOrders", SearchOrderHistory)
 	}
 
 	router.Run("0.0.0.0:80")
