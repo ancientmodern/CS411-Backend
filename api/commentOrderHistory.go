@@ -15,7 +15,8 @@ func AddComment(c *gin.Context) {
 	orderID := c.DefaultQuery("orderID", "")
 	rating := c.DefaultQuery("rating", "0")
 	content := c.DefaultQuery("content", "")
-	params := [...]string{orderID, rating, content}
+	var params []interface{}
+	params = append(params, orderID, rating, content)
 
 	sqlStr := "INSERT INTO Comments (OrderID, Rating, Content) VALUES (?, ?, ?)"
 
@@ -31,7 +32,7 @@ func AddComment(c *gin.Context) {
 	}
 	defer stmt.Close()
 
-	queryRes, err := stmt.ExecContext(ctx, params)
+	queryRes, err := stmt.ExecContext(ctx, params...)
 	if err != nil {
 		fmt.Printf("ExecContext failed, err: %v\n", err)
 		c.String(http.StatusBadRequest, "ExecContext failed, err: %v\n", err)
