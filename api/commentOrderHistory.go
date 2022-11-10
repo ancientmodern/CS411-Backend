@@ -103,21 +103,21 @@ func DeleteComment(c *gin.Context) {
 	commentID, err := strconv.Atoi(cid)
 	if err != nil {
 		fmt.Println("commentID has invalid format")
-		c.IndentedJSON(http.StatusBadRequest, updateCommentResponse{
+		c.IndentedJSON(http.StatusBadRequest, deleteCommentResponse{
 			false,
 			fmt.Sprintf("commentID has invalid format"),
 		})
 		return
 	}
-	sqlStr := "DELETE Comments WHERE commentID = ?"
+	sqlStr := "DELETE FROM Comments WHERE CommentID = ?"
 
-	fmt.Println(sqlStr)
+	fmt.Println("DELETE FROM Comments WHERE CommentID = #{commentID}")
 	ctx, cancelFunc := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancelFunc()
 	stmt, err := DBPool.PrepareContext(ctx, sqlStr)
 	if err != nil {
 		fmt.Printf("PrepareContext failed, err: %v\n", err)
-		c.IndentedJSON(http.StatusBadRequest, updateCommentResponse{
+		c.IndentedJSON(http.StatusBadRequest, deleteCommentResponse{
 			false,
 			fmt.Sprintf("PrepareContext failed, err: %v\n", err),
 		})
@@ -127,13 +127,13 @@ func DeleteComment(c *gin.Context) {
 	_, err = stmt.ExecContext(ctx, commentID)
 	if err != nil {
 		fmt.Printf("ExecContext failed, err: %v\n", err)
-		c.IndentedJSON(http.StatusBadRequest, updateCommentResponse{
+		c.IndentedJSON(http.StatusBadRequest, deleteCommentResponse{
 			false,
 			fmt.Sprintf("ExecContext failed, err: %v\n", err),
 		})
 		return
 	}
-	c.IndentedJSON(http.StatusOK, updateCommentResponse{true, ""})
+	c.IndentedJSON(http.StatusOK, deleteCommentResponse{true, ""})
 }
 
 func SearchOrderHistory(c *gin.Context) {
