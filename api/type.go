@@ -64,8 +64,9 @@ type addCommentRequest struct {
 }
 
 type addCommentResponse struct {
-	CommentID int  `json:"commentID"`
-	Success   bool `json:"success"`
+	CommentID int    `json:"commentID"`
+	Success   bool   `json:"success"`
+	Error     string `json:"error"`
 }
 
 type updateCommentRequest struct {
@@ -75,7 +76,8 @@ type updateCommentRequest struct {
 }
 
 type updateCommentResponse struct {
-	Success bool `json:"success"`
+	Success bool   `json:"success"`
+	Error   string `json:"error"`
 }
 
 type deleteCommentRequest struct {
@@ -83,7 +85,8 @@ type deleteCommentRequest struct {
 }
 
 type deleteCommentResponse struct {
-	Success bool `json:"success"`
+	Success bool   `json:"success"`
+	Error   string `json:"error"`
 }
 
 type historyOrderRequest struct {
