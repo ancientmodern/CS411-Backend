@@ -29,6 +29,9 @@ go build main.go
 curl -o cloud_sql_proxy https://dl.google.com/cloudsql/cloud_sql_proxy.darwin.arm64
 chmod +x cloud_sql_proxy
 ./cloud_sql_proxy -instances=cs411-team067:us-central1:sometimesnaive=tcp:3306 &
+# to kill a bind
+# ps | grep cloud_sql_proxy
+# kill ...
 ```
 6. Run the program with environment variables
 ```shell
