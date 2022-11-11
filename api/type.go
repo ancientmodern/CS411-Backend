@@ -57,22 +57,19 @@ type deleteOrderResponse struct {
 	Error   string `json:"error"`
 }
 
-type addCommentRequest struct {
-	OrderID int    `json:"orderID"`
+type getCommentRequest struct {
+	OrderID int `json:"orderID"`
+}
+
+type getCommentResponse struct {
 	Rating  int    `json:"rating"`
 	Content string `json:"content"`
 }
 
-type addCommentResponse struct {
-	CommentID int    `json:"commentID"`
-	Success   bool   `json:"success"`
-	Error     string `json:"error"`
-}
-
 type updateCommentRequest struct {
-	CommentID int    `json:"commentID"`
-	Rating    int    `json:"rating"`
-	Content   string `json:"content"`
+	OrderID int    `json:"orderID"`
+	Rating  int    `json:"rating"`
+	Content string `json:"content"`
 }
 
 type updateCommentResponse struct {
@@ -95,6 +92,8 @@ type historyOrderRequest struct {
 	MinPrice float64 `json:"minPrice"`
 	MaxTime  uint64  `json:"maxTime"`
 	MinTime  uint64  `json:"minTime"`
+	OrderBy  string  `json:"orderBy"`
+	Ascend   bool    `json:"ascend"`
 }
 
 type historyOrderResponseItem struct {

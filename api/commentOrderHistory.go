@@ -10,90 +10,122 @@ import (
 	"time"
 )
 
-func AddComment(c *gin.Context) {
-
+func UpdateComment(c *gin.Context) {
 	orderID := c.DefaultQuery("orderID", "")
 	rating := c.DefaultQuery("rating", "0")
 	content := c.DefaultQuery("content", "")
+	var insertBool bool
+	insertBool = false
 	var params []interface{}
 	params = append(params, orderID, rating, content)
 
-	sqlStr := "INSERT INTO Comments (OrderID, Rating, Content) VALUES (?, ?, ?)"
-
+	sqlStr := fmt.Sprintf("SELECT Rating FROM Comments WHERE OrderID LIKE %s", orderID)
 	fmt.Println(sqlStr)
 
-	ctx, cancelfunc := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancelfunc()
-	stmt, err := DBPool.PrepareContext(ctx, sqlStr)
+	rows, err := DBPool.Query(sqlStr)
 	if err != nil {
-		fmt.Printf("PrepareContext failed, err: %v\n", err)
-		c.String(http.StatusBadRequest, "PrepareContext failed, err: %v\n", err)
+		fmt.Printf("query failed, err: %v\n", err)
+		c.String(http.StatusBadRequest, "query failed, err: %v\n", err)
 		return
 	}
-	defer stmt.Close()
+	defer rows.Close()
 
-	queryRes, err := stmt.ExecContext(ctx, params...)
-	if err != nil {
-		fmt.Printf("ExecContext failed, err: %v\n", err)
-		c.String(http.StatusBadRequest, "ExecContext failed, err: %v\n", err)
-		return
-	}
-	commentID, err := queryRes.LastInsertId()
-	if err != nil {
-		fmt.Printf("LastInsertId failed, err: %v\n", err)
-		c.String(http.StatusBadRequest, "LastInsertId failed, err: %v\n", err)
-		return
+	for rows.Next() {
+		var row getCommentResponse
+		err := rows.Scan(&row.Rating)
+		if err != nil {
+			insertBool = true
+		}
 	}
 
-	c.IndentedJSON(http.StatusOK, int(commentID))
-}
+	if insertBool {
+		addsqlStr := "INSERT INTO Comments (OrderID, Rating, Content) VALUES (?, ?, ?)"
+		fmt.Println(addsqlStr)
 
-func UpdateComment(c *gin.Context) {
-	cid := c.Query("commentID")
-	if cid == "" {
-		fmt.Println("Missing query string 'commentID'")
-		c.String(http.StatusBadRequest, "Missing query string 'commentID'")
-	}
-	commentID, err := strconv.Atoi(cid)
-	if err != nil {
-		fmt.Println("orderID has invalid format")
-		c.IndentedJSON(http.StatusBadRequest, updateCommentResponse{
-			false,
-			"commentID invalid format (str to int)",
-		})
-		return
-	}
-	rating := c.DefaultQuery("rating", "0")
-	content := c.DefaultQuery("content", "")
-	sqlStr := fmt.Sprintf(
-		"UPDATE Comments "+
-			"SET Rating = %s, Content = %s "+
-			"WHERE commentID = ?",
-		rating, content,
-	)
-	fmt.Println(sqlStr)
-	ctx, cancelFunc := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancelFunc()
-	stmt, err := DBPool.PrepareContext(ctx, sqlStr)
-	if err != nil {
-		fmt.Printf("PrepareContext failed, err: %v\n", err)
-		c.IndentedJSON(http.StatusBadRequest, updateCommentResponse{
-			false,
-			fmt.Sprintf("PrepareContext failed, err: %v\n", err),
-		})
-		return
-	}
-	defer stmt.Close()
-	_, err = stmt.ExecContext(ctx, commentID)
-	if err != nil {
-		fmt.Printf("ExecContext failed, err: %v\n", err)
-		c.IndentedJSON(http.StatusBadRequest, updateCommentResponse{
-			false,
-			fmt.Sprintf("ExecContext failed, err: %v\n", err),
-		})
-		return
+		ctx, cancelfunc := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancelfunc()
+		stmt, err := DBPool.PrepareContext(ctx, addsqlStr)
+		if err != nil {
+			fmt.Printf("PrepareContext failed, err: %v\n", err)
+			c.IndentedJSON(http.StatusBadRequest, updateCommentResponse{
+				false,
+				fmt.Sprintf("PrepareContext failed, err: %v\n", err),
+			})
+			return
+		}
+		defer stmt.Close()
+
+		_, err = stmt.ExecContext(ctx, params...)
+		if err != nil {
+			fmt.Printf("ExecContext failed, err: %v\n", err)
+			c.IndentedJSON(http.StatusBadRequest, updateCommentResponse{
+				false,
+				fmt.Sprintf("ExecContext failed, err: %v\n", err),
+			})
+			return
+		}
+	} else {
+		updatesqlStr := fmt.Sprintf(
+			"UPDATE Comments "+
+				"SET Rating = %s, Content = %s "+
+				"WHERE orderID = ?",
+			rating, content,
+		)
+		fmt.Println(updatesqlStr)
+		orderID_int, err := strconv.Atoi(orderID)
+		if err != nil {
+			fmt.Println("orderID has invalid format")
+			c.IndentedJSON(http.StatusBadRequest, updateCommentResponse{
+				false,
+				"orderID invalid format (str to int)",
+			})
+			return
+		}
+		ctx, cancelFunc := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancelFunc()
+		stmt, err := DBPool.PrepareContext(ctx, updatesqlStr)
+		if err != nil {
+			fmt.Printf("PrepareContext failed, err: %v\n", err)
+			c.IndentedJSON(http.StatusBadRequest, updateCommentResponse{
+				false,
+				fmt.Sprintf("PrepareContext failed, err: %v\n", err),
+			})
+			return
+		}
+		defer stmt.Close()
+		_, err = stmt.ExecContext(ctx, orderID_int)
+		if err != nil {
+			fmt.Printf("ExecContext failed, err: %v\n", err)
+			c.IndentedJSON(http.StatusBadRequest, updateCommentResponse{
+				false,
+				fmt.Sprintf("ExecContext failed, err: %v\n", err),
+			})
+			return
+		}
 	}
 	c.IndentedJSON(http.StatusOK, updateCommentResponse{true, ""})
+}
+func GetComment(c *gin.Context) {
+	orderID := c.DefaultQuery("orderID", "")
+	sqlStr := fmt.Sprintf("SELECT Rating, Content FROM Comments WHERE OrderID LIKE %s", orderID)
+	fmt.Println(sqlStr)
+
+	rows, err := DBPool.Query(sqlStr)
+	if err != nil {
+		fmt.Printf("query failed, err: %v\n", err)
+		c.String(http.StatusBadRequest, "query failed, err: %v\n", err)
+		return
+	}
+	defer rows.Close()
+
+	var res getCommentResponse
+	for rows.Next() {
+		err := rows.Scan(&res.Rating, &res.Content)
+		if err != nil {
+
+		}
+	}
+	c.IndentedJSON(http.StatusOK, res)
 }
 func DeleteComment(c *gin.Context) {
 	cid := c.Query("commentID")
@@ -152,6 +184,7 @@ func SearchOrderHistory(c *gin.Context) {
 	maxTime := c.DefaultQuery("maxTime", "20221111235959")
 	order := c.DefaultQuery("orderBy", "orderID")
 	ascend := c.DefaultQuery("ascend", "ASC")
+
 	if ascend == "false" {
 		ascend = "DESC"
 	}
