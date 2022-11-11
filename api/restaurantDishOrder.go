@@ -270,7 +270,7 @@ func AdvancedCustomers(c *gin.Context) {
 
 	// TODO: SQL Prepare
 	// FIXME: Potential SQL Injection
-	sqlStr := "SELECT UserID, UserName, COUNT(OrderID) as numberOfOrders, " +
+	sqlStr := "SELECT UserID, UserName, COUNT(OrderID) as numberOfOrders " +
 		"FROM Users NATURAL JOIN Orders " +
 		"WHERE DishPrice > ? AND OrderTime > ? " +
 		"GROUP BY UserID " +
