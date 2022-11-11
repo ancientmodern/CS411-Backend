@@ -262,3 +262,81 @@ func DeleteOrder(c *gin.Context) {
 
 	c.IndentedJSON(http.StatusOK, deleteOrderResponse{orderID, true, ""})
 }
+
+func AdvancedCustomers(c *gin.Context) {
+	minDishPrice := c.DefaultQuery("minDishPrice", "0")
+	minTime := c.DefaultQuery("minTime", "20000000000000")
+	minOrders := c.DefaultQuery("minOrders", "0")
+
+	// TODO: SQL Prepare
+	// FIXME: Potential SQL Injection
+	sqlStr := "SELECT UserID, UserName, COUNT(OrderID) as numberOfOrders " +
+		"FROM Users NATURAL JOIN Orders " +
+		"WHERE DishPrice > ? AND OrderTime > ? " +
+		"GROUP BY UserID " +
+		"HAVING numberOfOrders > ? " +
+		"ORDER BY numberOfOrders DESC;"
+	fmt.Println(sqlStr)
+
+	rows, err := DBPool.Query(sqlStr, minDishPrice, minTime, minOrders)
+	if err != nil {
+		fmt.Printf("query failed, err: %v\n", err)
+		c.String(http.StatusBadRequest, "query failed, err: %v\n", err)
+		return
+	}
+	defer rows.Close()
+
+	res := make(advancedCustomersResponse, 0)
+	for rows.Next() {
+		var row advancedCustomersResponseItem
+		err := rows.Scan(&row.UserID, &row.UserName, &row.NumberOfOrders)
+		if err != nil {
+			fmt.Printf("scan failed, err: %v\n", err)
+			c.String(http.StatusBadRequest, "scan failed, err: %v\n", err)
+			return
+		}
+		res = append(res, row)
+	}
+
+	c.IndentedJSON(http.StatusOK, res)
+}
+
+func AdvancedRestaurants(c *gin.Context) {
+	minCode := c.DefaultQuery("zipCode", "0")
+	maxCode := c.DefaultQuery("zipCode", "100000")
+	minPrice := c.DefaultQuery("minPrice", "0")
+	top := c.DefaultQuery("top", "100")
+
+	// TODO: SQL Prepare
+	// FIXME: Potential SQL Injection
+	sqlStr := "SELECT RestaurantID, RestaurantName, AVG(Price) as avgPrice " +
+		"FROM Restaurants NATURAL JOIN Dishes " +
+		"WHERE ZipCode >= ? AND ZipCode <= ? " +
+		"GROUP BY RestaurantID " +
+		"HAVING avgPrice >= ? " +
+		"ORDER BY avgPrice DESC " +
+		"LIMIT ?;"
+	fmt.Println(sqlStr)
+
+	rows, err := DBPool.Query(sqlStr, minCode, maxCode, minPrice, top)
+	if err != nil {
+		fmt.Printf("query failed, err: %v\n", err)
+		c.String(http.StatusBadRequest, "query failed, err: %v\n", err)
+		return
+	}
+	defer rows.Close()
+
+	res := make(advancedRestaurantsResponse, 0)
+	for rows.Next() {
+		var row advancedRestaurantsResponseItem
+		err := rows.Scan(&row.RestaurantID, &row.RestaurantName, &row.AvgPrice)
+		if err != nil {
+			fmt.Printf("scan failed, err: %v\n", err)
+			c.String(http.StatusBadRequest, "scan failed, err: %v\n", err)
+			return
+		}
+		res = append(res, row)
+	}
+
+	c.IndentedJSON(http.StatusOK, res)
+}

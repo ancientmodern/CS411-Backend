@@ -30,6 +30,8 @@ func main() {
 		v1.GET("/getComment", GetComment)
 		v1.DELETE("/deleteComment", DeleteComment)
 		v1.GET("/historyOrders", SearchOrderHistory)
+		v1.GET("/advancedCustomers", AdvancedCustomers)
+		v1.GET("/advancedRestaurants", AdvancedRestaurants)
 	}
 
 	router.Run("0.0.0.0:80")
