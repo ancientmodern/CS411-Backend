@@ -77,7 +77,7 @@ func UpdateComment(c *gin.Context) {
 	} else {
 		updatesqlStr := fmt.Sprintf(
 			"UPDATE Comments "+
-				"SET Rating = %s, Content = %s "+
+				"SET Rating = %d, Content = %s "+
 				"WHERE orderID = ?",
 			rating, content,
 		)
