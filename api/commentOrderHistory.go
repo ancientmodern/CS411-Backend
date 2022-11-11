@@ -26,7 +26,7 @@ func UpdateComment(c *gin.Context) {
 	var params []interface{}
 	params = append(params, orderID, rating, content)
 
-	sqlStr := fmt.Sprintf("SELECT Rating FROM Comments WHERE OrderID = %d", orderID)
+	sqlStr := fmt.Sprintf("SELECT Rating, Content FROM Comments WHERE OrderID = %d", orderID)
 	fmt.Println(sqlStr)
 
 	rows, err := DBPool.Query(sqlStr)
@@ -39,7 +39,7 @@ func UpdateComment(c *gin.Context) {
 
 	for rows.Next() {
 		var row getCommentResponse
-		err := rows.Scan(&row.Rating)
+		err := rows.Scan(&row.Rating, &row.Content)
 		if err != nil {
 			insertBool = true
 		}
