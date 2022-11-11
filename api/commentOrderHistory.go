@@ -22,8 +22,6 @@ func UpdateComment(c *gin.Context) {
 	content := req.Content
 
 	insertBool := true
-	var params []interface{}
-	params = append(params, orderID, rating, content)
 
 	sqlStr := fmt.Sprintf("SELECT Rating, Content FROM Comments WHERE OrderID = %d", orderID)
 	fmt.Println(sqlStr)
@@ -48,7 +46,7 @@ func UpdateComment(c *gin.Context) {
 	}
 
 	if insertBool {
-		addsqlStr := "INSERT INTO Comments (OrderID, Rating, Content) VALUES (?, ?, ?)"
+		addsqlStr := "INSERT INTO Comments (CommentID, OrderID, Rating, Content) VALUES (?, ?, ?, ?)"
 		fmt.Println(addsqlStr)
 
 		ctx, cancelfunc := context.WithTimeout(context.Background(), 5*time.Second)
@@ -64,7 +62,7 @@ func UpdateComment(c *gin.Context) {
 		}
 		defer stmt.Close()
 
-		_, err = stmt.ExecContext(ctx, params...)
+		_, err = stmt.ExecContext(ctx, orderID, orderID, rating, content)
 		if err != nil {
 			fmt.Printf("ExecContext failed, err: %v\n", err)
 			c.IndentedJSON(http.StatusBadRequest, updateCommentResponse{
