@@ -112,3 +112,11 @@ type advancedCustomersResponseItem struct {
 }
 
 type advancedCustomersResponse []advancedCustomersResponseItem
+
+type advancedRestaurantsResponseItem struct {
+	RestaurantID   int     `json:"restaurantID"`
+	RestaurantName string  `json:"restaurantName"`
+	AvgPrice       float64 `json:"avgPrice"`
+}
+
+type advancedRestaurantsResponse []advancedRestaurantsResponseItem
