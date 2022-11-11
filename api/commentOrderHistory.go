@@ -11,9 +11,7 @@ import (
 )
 
 func UpdateComment(c *gin.Context) {
-	//orderID := c.DefaultQuery("orderID", "")
-	//rating := c.DefaultQuery("rating", "0")
-	//content := c.DefaultQuery("content", "")
+
 	var req updateCommentRequest
 	if err := c.BindJSON(&req); err != nil {
 		fmt.Printf("BindJSON failed, err: %v\n", err)
@@ -29,7 +27,7 @@ func UpdateComment(c *gin.Context) {
 	var params []interface{}
 	params = append(params, orderID, rating, content)
 
-	sqlStr := fmt.Sprintf("SELECT Rating FROM Comments WHERE OrderID = %d", orderID)
+	sqlStr := fmt.Sprintf("SELECT Rating, Content FROM Comments WHERE OrderID = %d", orderID)
 	fmt.Println(sqlStr)
 
 	rows, err := DBPool.Query(sqlStr)
@@ -42,7 +40,7 @@ func UpdateComment(c *gin.Context) {
 
 	for rows.Next() {
 		var row getCommentResponse
-		err := rows.Scan(&row.Rating)
+		err := rows.Scan(&row.Rating, &row.Content)
 		if err != nil {
 			insertBool = true
 		}
@@ -77,20 +75,11 @@ func UpdateComment(c *gin.Context) {
 	} else {
 		updatesqlStr := fmt.Sprintf(
 			"UPDATE Comments "+
-				"SET Rating = %s, Content = %s "+
+				"SET Rating = %d, Content = %s "+
 				"WHERE orderID = ?",
 			rating, content,
 		)
 		fmt.Println(updatesqlStr)
-		//orderID_int, err := strconv.Atoi(orderID)
-		//if err != nil {
-		//	fmt.Println("orderID has invalid format")
-		//	c.IndentedJSON(http.StatusBadRequest, updateCommentResponse{
-		//		false,
-		//		"orderID invalid format (str to int)",
-		//	})
-		//	return
-		//}
 		ctx, cancelFunc := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancelFunc()
 		stmt, err := DBPool.PrepareContext(ctx, updatesqlStr)
