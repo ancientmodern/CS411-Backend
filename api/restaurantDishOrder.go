@@ -25,6 +25,8 @@ func SearchRestaurant(c *gin.Context) {
 	ascend := c.DefaultQuery("ascend", "ASC")
 	if ascend == "false" {
 		ascend = "DESC"
+	} else {
+		ascend = "ASC"
 	}
 
 	// TODO: SQL Prepare
@@ -72,6 +74,8 @@ func SearchDish(c *gin.Context) {
 	ascend := c.DefaultQuery("ascend", "ASC")
 	if ascend == "false" {
 		ascend = "DESC"
+	} else {
+		ascend = "ASC"
 	}
 
 	// TODO: SQL Prepare

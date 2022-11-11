@@ -190,6 +190,8 @@ func SearchOrderHistory(c *gin.Context) {
 
 	if ascend == "false" {
 		ascend = "DESC"
+	} else {
+		ascend = "ASC"
 	}
 
 	sqlStr := fmt.Sprintf(
