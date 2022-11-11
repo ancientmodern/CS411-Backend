@@ -11,9 +11,6 @@ import (
 )
 
 func UpdateComment(c *gin.Context) {
-	//orderID := c.DefaultQuery("orderID", "")
-	//rating := c.DefaultQuery("rating", "0")
-	//content := c.DefaultQuery("content", "")
 	var req updateCommentRequest
 	if err := c.BindJSON(&req); err != nil {
 		fmt.Printf("BindJSON failed, err: %v\n", err)
@@ -75,25 +72,14 @@ func UpdateComment(c *gin.Context) {
 			return
 		}
 	} else {
-		updatesqlStr := fmt.Sprintf(
-			"UPDATE Comments "+
-				"SET Rating = %d, Content = %s "+
-				"WHERE orderID = ?",
-			rating, content,
-		)
-		fmt.Println(updatesqlStr)
-		//orderID_int, err := strconv.Atoi(orderID)
-		//if err != nil {
-		//	fmt.Println("orderID has invalid format")
-		//	c.IndentedJSON(http.StatusBadRequest, updateCommentResponse{
-		//		false,
-		//		"orderID invalid format (str to int)",
-		//	})
-		//	return
-		//}
+		updateSqlStr := "UPDATE Comments " +
+			"SET Rating = ?, Content = ? " +
+			"WHERE OrderID = ?;"
+		fmt.Println(updateSqlStr)
+
 		ctx, cancelFunc := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancelFunc()
-		stmt, err := DBPool.PrepareContext(ctx, updatesqlStr)
+		stmt, err := DBPool.PrepareContext(ctx, updateSqlStr)
 		if err != nil {
 			fmt.Printf("PrepareContext failed, err: %v\n", err)
 			c.IndentedJSON(http.StatusBadRequest, updateCommentResponse{
@@ -103,7 +89,8 @@ func UpdateComment(c *gin.Context) {
 			return
 		}
 		defer stmt.Close()
-		_, err = stmt.ExecContext(ctx, orderID)
+
+		_, err = stmt.ExecContext(ctx, rating, content, orderID)
 		if err != nil {
 			fmt.Printf("ExecContext failed, err: %v\n", err)
 			c.IndentedJSON(http.StatusBadRequest, updateCommentResponse{
@@ -113,6 +100,7 @@ func UpdateComment(c *gin.Context) {
 			return
 		}
 	}
+
 	c.IndentedJSON(http.StatusOK, updateCommentResponse{true, ""})
 }
 
@@ -136,6 +124,7 @@ func GetComment(c *gin.Context) {
 
 		}
 	}
+
 	c.IndentedJSON(http.StatusOK, res)
 }
 
