@@ -21,8 +21,7 @@ func UpdateComment(c *gin.Context) {
 	rating := req.Rating
 	content := req.Content
 
-	var insertBool bool
-	insertBool = false
+	insertBool := true
 	var params []interface{}
 	params = append(params, orderID, rating, content)
 
@@ -41,8 +40,11 @@ func UpdateComment(c *gin.Context) {
 		var row getCommentResponse
 		err := rows.Scan(&row.Rating, &row.Content)
 		if err != nil {
-			insertBool = true
+			fmt.Printf("scan failed, err: %v\n", err)
+			c.String(http.StatusBadRequest, "scan failed, err: %v\n", err)
+			return
 		}
+		insertBool = false
 	}
 
 	if insertBool {
