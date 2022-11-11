@@ -26,7 +26,7 @@ func main() {
 		v1.GET("/searchDish", SearchDish)
 		v1.POST("/placeOrder", PlaceOrder)
 		v1.DELETE("/deleteOrder", DeleteOrder)
-		v1.PUT("/updateComment", UpdateComment)
+		v1.POST("/updateComment", UpdateComment)
 		v1.GET("/getComment", GetComment)
 		v1.DELETE("/deleteComment", DeleteComment)
 		v1.GET("/historyOrders", SearchOrderHistory)
