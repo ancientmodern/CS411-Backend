@@ -262,3 +262,41 @@ func DeleteOrder(c *gin.Context) {
 
 	c.IndentedJSON(http.StatusOK, deleteOrderResponse{orderID, true, ""})
 }
+
+func AdvancedCustomers(c *gin.Context) {
+	minDishPrice := c.DefaultQuery("minDishPrice", "0")
+	minTime := c.DefaultQuery("minTime", "20000000000000")
+	minOrders := c.DefaultQuery("minOrders", "0")
+
+	// TODO: SQL Prepare
+	// FIXME: Potential SQL Injection
+	sqlStr := "SELECT UserID, UserName, COUNT(OrderID) as numberOfOrders, " +
+		"FROM Users NATURAL JOIN Orders " +
+		"WHERE DishPrice > ? AND OrderTime > ? " +
+		"GROUP BY UserID " +
+		"HAVING numberOfOrders > ? " +
+		"ORDER BY numberOfOrders DESC;"
+	fmt.Println(sqlStr)
+
+	rows, err := DBPool.Query(sqlStr, minDishPrice, minTime, minOrders)
+	if err != nil {
+		fmt.Printf("query failed, err: %v\n", err)
+		c.String(http.StatusBadRequest, "query failed, err: %v\n", err)
+		return
+	}
+	defer rows.Close()
+
+	res := make(advancedCustomersResponse, 0)
+	for rows.Next() {
+		var row advancedCustomersResponseItem
+		err := rows.Scan(&row.UserID, &row.UserName, &row.NumberOfOrders)
+		if err != nil {
+			fmt.Printf("scan failed, err: %v\n", err)
+			c.String(http.StatusBadRequest, "scan failed, err: %v\n", err)
+			return
+		}
+		res = append(res, row)
+	}
+
+	c.IndentedJSON(http.StatusOK, res)
+}

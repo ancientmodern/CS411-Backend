@@ -105,6 +105,7 @@ func UpdateComment(c *gin.Context) {
 	}
 	c.IndentedJSON(http.StatusOK, updateCommentResponse{true, ""})
 }
+
 func GetComment(c *gin.Context) {
 	orderID := c.DefaultQuery("orderID", "")
 	sqlStr := fmt.Sprintf("SELECT Rating, Content FROM Comments WHERE OrderID LIKE %s", orderID)
@@ -127,24 +128,26 @@ func GetComment(c *gin.Context) {
 	}
 	c.IndentedJSON(http.StatusOK, res)
 }
+
 func DeleteComment(c *gin.Context) {
-	cid := c.Query("commentID")
-	if cid == "" {
-		fmt.Println("Missing query string 'commentID'")
-		c.String(http.StatusBadRequest, "Missing query string 'commentID'")
+	oid := c.Query("orderID")
+	if oid == "" {
+		fmt.Println("Missing query string 'orderID'")
+		c.String(http.StatusBadRequest, "Missing query string 'orderID'")
 	}
-	commentID, err := strconv.Atoi(cid)
+
+	orderID, err := strconv.Atoi(oid)
 	if err != nil {
-		fmt.Println("commentID has invalid format")
+		fmt.Println("orderID has invalid format")
 		c.IndentedJSON(http.StatusBadRequest, deleteCommentResponse{
 			false,
-			fmt.Sprintf("commentID has invalid format"),
+			fmt.Sprintf("orderID has invalid format"),
 		})
 		return
 	}
-	sqlStr := "DELETE FROM Comments WHERE CommentID = ?"
+	sqlStr := "DELETE FROM Comments WHERE OrderID = ?"
+	fmt.Println("DELETE FROM Comments WHERE OrderID = #{orderID}")
 
-	fmt.Println("DELETE FROM Comments WHERE CommentID = #{commentID}")
 	ctx, cancelFunc := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancelFunc()
 	stmt, err := DBPool.PrepareContext(ctx, sqlStr)
@@ -157,7 +160,8 @@ func DeleteComment(c *gin.Context) {
 		return
 	}
 	defer stmt.Close()
-	_, err = stmt.ExecContext(ctx, commentID)
+
+	_, err = stmt.ExecContext(ctx, orderID)
 	if err != nil {
 		fmt.Printf("ExecContext failed, err: %v\n", err)
 		c.IndentedJSON(http.StatusBadRequest, deleteCommentResponse{
@@ -166,11 +170,11 @@ func DeleteComment(c *gin.Context) {
 		})
 		return
 	}
+
 	c.IndentedJSON(http.StatusOK, deleteCommentResponse{true, ""})
 }
 
 func SearchOrderHistory(c *gin.Context) {
-
 	var req historyOrderRequest
 	if c.Bind(&req) != nil {
 		c.String(http.StatusBadRequest, "Query parameters are not correct")

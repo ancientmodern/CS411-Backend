@@ -104,3 +104,11 @@ type historyOrderResponseItem struct {
 	RiderID   int     `json:"riderID"`
 }
 type historyOrderResponse []historyOrderResponseItem
+
+type advancedCustomersResponseItem struct {
+	UserID         int    `json:"userID"`
+	UserName       string `json:"userName"`
+	NumberOfOrders int    `json:"numberOfOrders"`
+}
+
+type advancedCustomersResponse []advancedCustomersResponseItem
