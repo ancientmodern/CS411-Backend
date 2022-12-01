@@ -392,6 +392,7 @@ func syncRestAvgPrice() {
 		fmt.Printf("query failed, err: %v\n", err)
 		return
 	}
+	fmt.Println("syncRestAvgPrice finished")
 }
 
 //func AdvancedRestaurants(c *gin.Context) {
