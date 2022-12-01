@@ -352,7 +352,7 @@ func UpdateDishPrice(c *gin.Context) {
 		return
 	}
 
-	sqlStr := "Update Dishes SET Price = ? WHERE DishID = ?;"
+	sqlStr := "Update Dishes SET Price = ? WHERE DishID = ?; CALL restAvgPrice(100000, 0, 0, 1000);"
 	fmt.Println(sqlStr)
 
 	ctx, cancelFunc := context.WithTimeout(context.Background(), 5*time.Second)
