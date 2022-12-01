@@ -343,6 +343,44 @@ func AdvancedRestaurants(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, res)
 }
 
+func UpdateDishPrice(c *gin.Context) {
+	var req updateDishPriceRequest
+
+	if err := c.BindJSON(&req); err != nil {
+		fmt.Printf("BindJSON failed, err: %v\n", err)
+		c.String(http.StatusBadRequest, "BindJSON failed, err: %v\n", err)
+		return
+	}
+
+	sqlStr := "Update Dishes SET Price = ? WHERE DishID = ?;"
+	fmt.Println(sqlStr)
+
+	ctx, cancelFunc := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancelFunc()
+	stmt, err := DBPool.PrepareContext(ctx, sqlStr)
+	if err != nil {
+		fmt.Printf("PrepareContext failed, err: %v\n", err)
+		c.IndentedJSON(http.StatusBadRequest, updateCommentResponse{
+			false,
+			fmt.Sprintf("PrepareContext failed, err: %v\n", err),
+		})
+		return
+	}
+	defer stmt.Close()
+
+	_, err = stmt.ExecContext(ctx, req.NewPrice, req.DishID)
+	if err != nil {
+		fmt.Printf("ExecContext failed, err: %v\n", err)
+		c.IndentedJSON(http.StatusBadRequest, updateDishPriceResponse{
+			false,
+			fmt.Sprintf("ExecContext failed, err: %v\n", err),
+		})
+		return
+	}
+
+	c.IndentedJSON(http.StatusOK, updateCommentResponse{true, ""})
+}
+
 //func AdvancedRestaurants(c *gin.Context) {
 //	minCode := c.DefaultQuery("zipCode", "0")
 //	maxCode := c.DefaultQuery("zipCode", "100000")

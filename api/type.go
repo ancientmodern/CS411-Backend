@@ -120,3 +120,13 @@ type advancedRestaurantsResponseItem struct {
 }
 
 type advancedRestaurantsResponse []advancedRestaurantsResponseItem
+
+type updateDishPriceRequest struct {
+	DishID   int     `json:"dishID"`
+	NewPrice float64 `json:"newPrice"`
+}
+
+type updateDishPriceResponse struct {
+	Success bool   `json:"success"`
+	Error   string `json:"error"`
+}
