@@ -379,6 +379,16 @@ func UpdateDishPrice(c *gin.Context) {
 	}
 
 	c.IndentedJSON(http.StatusOK, updateCommentResponse{true, ""})
+
+	sqlStr = "CALL restAvgPrice();"
+	fmt.Println(sqlStr)
+
+	_, err = DBPool.Query(sqlStr)
+	if err != nil {
+		fmt.Printf("query failed, err: %v\n", err)
+		c.String(http.StatusBadRequest, "query failed, err: %v\n", err)
+		return
+	}
 }
 
 //func AdvancedRestaurants(c *gin.Context) {
