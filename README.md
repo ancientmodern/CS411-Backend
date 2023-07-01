@@ -1,4 +1,6 @@
-# Illini Foodie Backend
+# CS 411 - Database Systems - Illini Foodie Backend
+A simple RESTful backend for Fall 2022 CS 411 - Database Systems final project.
+
 ## Requirement
 - Go >= 1.19
 - MySQL
